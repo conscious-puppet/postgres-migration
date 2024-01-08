@@ -1,0 +1,33 @@
+[
+    {
+        "env": "dev",
+        "migrationLockInfo": [
+            {
+                "filePath": "db-migration/dev/migration_000_000_0000_baseline.sql",
+                "hash": "bfc9207c6c8c312ceb0671e67a9f3fb6",
+                "majorVersion": "000",
+                "minorVersion": "000",
+                "pointVersion": "0000"
+            }
+        ]
+    },
+    {
+        "env": "common",
+        "migrationLockInfo": [
+            {
+                "filePath": "db-migration/common/migration_000_000_0000_baseline.sql",
+                "hash": "50515b2cf13df57e89cb7b818a5a9cfe",
+                "majorVersion": "000",
+                "minorVersion": "000",
+                "pointVersion": "0000"
+            },
+            {
+                "filePath": "db-migration/common/migration_000_000_0010_baseline.sql",
+                "hash": "50515b2cf13df57e89cb7b818a5a9cfe",
+                "majorVersion": "000",
+                "minorVersion": "000",
+                "pointVersion": "0010"
+            }
+        ]
+    }
+]
