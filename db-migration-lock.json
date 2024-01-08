@@ -8,6 +8,13 @@
                 "majorVersion": "000",
                 "minorVersion": "000",
                 "pointVersion": "0000"
+            },
+            {
+                "filePath": "db-migration/dev/migration_000_000_0001_baseline.sql",
+                "hash": "c2543a56b317e2a2145bba70e2a3f6bc",
+                "majorVersion": "000",
+                "minorVersion": "000",
+                "pointVersion": "0001"
             }
         ]
     },
@@ -20,13 +27,6 @@
                 "majorVersion": "000",
                 "minorVersion": "000",
                 "pointVersion": "0000"
-            },
-            {
-                "filePath": "db-migration/common/migration_000_000_0010_baseline.sql",
-                "hash": "50515b2cf13df57e89cb7b818a5a9cfe",
-                "majorVersion": "000",
-                "minorVersion": "000",
-                "pointVersion": "0010"
             }
         ]
     }

@@ -5,21 +5,8 @@ author:             Abhishek Singh
 
 executable postgres-migration
     main-is:                Main.hs
-    -- other-modules:          Storage.Types.Address
-    --              ,          Storage.Types.Album
-    --              ,          Storage.Types.Artist
-    --              ,          Storage.Types.Customer
-    --              ,          Storage.Types.DB
-    --              ,          Storage.Types.InMemDb
-    --              ,          Storage.Types.Employee
-    --              ,          Storage.Types.Genre
-    --              ,          Storage.Types.Invoice
-    --              ,          Storage.Types.InvoiceLine
-    --              ,          Storage.Types.MediaType
-    --              ,          Storage.Types.Playlist
-    --              ,          Storage.Types.PlaylistTrack
-    --              ,          Storage.Types.Track
-    --              ,          Storage.Queries.Artist
+    -- other-modules:          Storage.Types.Migration
+    --              ,          Storage.Queries.Migration
     --              ,          Storage.Queries.DBQueries
     -- default-extensions:    StandaloneDeriving
     --                   ,    FlexibleInstances
@@ -36,6 +23,7 @@ executable postgres-migration
                       ,    DeriveGeneric
                       ,    DeriveAnyClass
                       ,    DuplicateRecordFields
+                      ,    ScopedTypeVariables
     build-depends:         base
                  ,         scientific
                  ,         time
