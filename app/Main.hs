@@ -72,7 +72,7 @@ verifyMigrationLocks :: ([MigrationLockInfo], [MigrationLockInfo]) -> IO ()
 verifyMigrationLocks (_, []) = return ()
 verifyMigrationLocks ([], _) = return ()
 verifyMigrationLocks (migrationLockInfos, newMigrationLockInfos) = do
-  let newMigartionLockInfos' = tail $ reverse newMigrationLockInfos
+  let (latestMigrationFile : newMigartionLockInfos') = reverse newMigrationLockInfos
   let filesChanged =
         [ filePath y
         | x <- migrationLockInfos
@@ -87,29 +87,40 @@ verifyMigrationLocks (migrationLockInfos, newMigrationLockInfos) = do
             /= hash y
         ]
   unless (null filesChanged) $ error $ "Following old migration files have changed. Only latest migration files should be edited, please revert the changes:\n\t" <> show filesChanged
-  let oldMigrationLockInfos = filter (`elem` newMigrationLockInfos) migrationLockInfos
-  if null oldMigrationLockInfos
-    then return ()
-    else do
-      let oldMigrationFile = last oldMigrationLockInfos
-      let invalidMigrationFiles =
-            foldl'
-              ( \acc f ->
-                  if f
-                    `notElem` migrationLockInfos
-                    && ( majorVersion f
-                          <> minorVersion f
-                          <> pointVersion f
-                          < majorVersion oldMigrationFile
-                          <> minorVersion oldMigrationFile
-                          <> pointVersion oldMigrationFile
-                       )
-                    then f : acc
-                    else acc
-              )
-              []
-              newMigrationLockInfos
-      unless (null invalidMigrationFiles) $ error $ "Following new migration files have been added with older versions, please update the version numbers:\n\t" <> show invalidMigrationFiles
+  let removedMigrationLockInfos =
+        filter
+          ( \f ->
+              f
+                `notElem` newMigartionLockInfos'
+                && ( majorVersion f
+                      <> minorVersion f
+                      <> pointVersion f
+                      /= majorVersion latestMigrationFile
+                      <> minorVersion latestMigrationFile
+                      <> pointVersion latestMigrationFile
+                   )
+          )
+          migrationLockInfos
+  unless (null removedMigrationLockInfos) $ error $ "Following old migration files have been removed, please add them back:\n\t" <> show removedMigrationLockInfos
+  let oldMigrationFile = last migrationLockInfos
+  let invalidMigrationFiles =
+        foldl'
+          ( \acc f ->
+              if f
+                `notElem` migrationLockInfos
+                && ( majorVersion f
+                      <> minorVersion f
+                      <> pointVersion f
+                      < majorVersion oldMigrationFile
+                      <> minorVersion oldMigrationFile
+                      <> pointVersion oldMigrationFile
+                   )
+                then f : acc
+                else acc
+          )
+          []
+          newMigrationLockInfos
+  unless (null invalidMigrationFiles) $ error $ "Following new migration files have been added with older versions, please update the version numbers:\n\t" <> show invalidMigrationFiles
 
 createMigrationLockInfo :: FilePath -> IO [MigrationLockInfo]
 createMigrationLockInfo e = do
@@ -198,6 +209,7 @@ runMigrations env' migrationLocks = do
     mapM_
       ( \script -> do
           q <- BS.readFile (filePath script)
+          putStrLn $ "Executing " <> filePath script <> " ..."
           void $ PSQL.execute_ conn . PSQL.Query $ q
           void
             $ PSQL.execute

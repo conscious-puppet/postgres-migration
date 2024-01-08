@@ -15,6 +15,13 @@
                 "majorVersion": "000",
                 "minorVersion": "000",
                 "pointVersion": "0001"
+            },
+            {
+                "filePath": "db-migration/dev/migration_000_000_0002_baseline.sql",
+                "hash": "cbec318bccc78f5d8491a63e1f470868",
+                "majorVersion": "000",
+                "minorVersion": "000",
+                "pointVersion": "0002"
             }
         ]
     },
