@@ -5,14 +5,11 @@ import Control.Monad (void, when)
 import qualified Crypto.Hash as CH
 import Data.Attoparsec.Combinator (lookAhead)
 import Data.Attoparsec.Text
+import qualified Data.ByteString.UTF8 as BSU
 import Data.Char
 import Data.Maybe (fromMaybe)
 import Data.Text (pack, unpack)
 import qualified Data.Text as DT
-
--- import qualified Data.Text.Encoding as DT
--- import qualified Data.ByteString as BS
-import qualified Data.ByteString.UTF8 as BSU
 import Text.Read (readMaybe)
 import Types
 
@@ -30,21 +27,21 @@ sqlParser :: FilePath -> Parser TableMigration
 sqlParser inputFile = do
   btn <-
     trim
-      <$> ( (string "--@baseTableName:" <|> error ("@baseTableName tag not present for " <> inputFile))
+      <$> ( (string "--@baseTableName:" <?> "@baseTableName tag not present")
               *> manyTill anyChar (lookAhead $ string "--@")
           )
   when (null btn) $ error $ "@baseTableName value not provided for " <> inputFile
   partitionSupportEnabledMaybe <-
     readMaybe
       . trim
-      <$> ( (string "--@partitionSupportEnabled:" <|> error ("@partitionSupportEnabled tag not present for " <> inputFile))
+      <$> ( (string "--@partitionSupportEnabled:" <?> "@partitionSupportEnabled tag not present")
               *> manyTill anyChar (lookAhead $ string "--@")
           )
-  when (null partitionSupportEnabledMaybe) $ error $ "@partitionSupportEnabled value not provided, or is an invalid Bool for " <> inputFile
+  when (null partitionSupportEnabledMaybe) $ fail "@partitionSupportEnabled value not provided, or is an invalid Bool"
   let pse = fromMaybe False partitionSupportEnabledMaybe
   enablePartitionQuery <- fromMaybe "" <$> optional parseEnableParitionQuery
-  when (pse && null enablePartitionQuery) $ error $ "@enablePartitionQuery value is not provided for " <> inputFile
-  when (not pse && not (null enablePartitionQuery)) $ error $ "@enablePartitionQuery provided when @partitionSupportEnabled is False for " <> inputFile
+  when (pse && null enablePartitionQuery) $ fail "@enablePartitionQuery value is not provided"
+  when (not pse && not (null enablePartitionQuery)) $ fail "@enablePartitionQuery provided when @partitionSupportEnabled is False"
   cl <- some (parseChangeLog inputFile)
   return $ TableMigration btn pse (Just enablePartitionQuery) cl
 
@@ -57,27 +54,39 @@ parseEnableParitionQuery = do
 
 parseChangeLog :: FilePath -> Parser Changelog
 parseChangeLog inputFile = do
-  versionMaybe <- readMaybe . trim <$> ((string "--@changelogVersion:" <?> "@changelogVersion tag not for a changelog") *> manyTill anyChar (lookAhead $ string "--@"))
-  when (null versionMaybe) $ error $ "@changelogVersion value not provided for a changelog in " <> inputFile
-  let version = fromMaybe 0 versionMaybe
-  tg <-
-    trim
-      <$> ( (string "--@tag:" <|> error ("@tag tag not found for a changelog in " <> inputFile))
-              *> manyTill anyChar (lookAhead $ string "--@")
-          )
-  when (null tg) $ error $ "@tag value not provided for a changelog in " <> inputFile
-  withAutomaticRollbackMaybe <-
-    readMaybe
-      . trim
-      <$> ( (string "--@withAutomaticRollback:" <|> error ("@withAutomaticRollback tag not found for a changelog in " <> inputFile))
-              *> manyTill anyChar (lookAhead $ string "--@")
-          )
-  when (null withAutomaticRollbackMaybe) $ error $ "@withAutomaticRollback value not provided, or is not a valid Bool for a changelog in " <> inputFile
-  let automaticRollback = fromMaybe False withAutomaticRollbackMaybe
-  mQuery <- (string "--@migrationQuery\n" <|> error ("@migrationQuery tag not provided for a changelog in " <> inputFile)) *> manyTill anyChar (lookAhead $ string "--@")
-  rQuery <- (string "--@rollbackQuery\n" <|> error ("@rollbackQuery tag not provided for a changelog in " <> inputFile)) *> manyTill anyChar (lookAhead $ string "--@")
-  let migrationHash = (CH.hash . BSU.fromString $ mQuery) :: (CH.Digest CH.MD5)
-  return $ Changelog version tg automaticRollback mQuery rQuery (DT.pack $ show migrationHash)
+  clVersion <- optional getChangelogVersion
+  tg <- optional getTag
+  automaticRollback <- optional getAutomaticRollback
+  mQuery <- optional getMigrationQuery
+  rQuery <- optional getRollbackQuery
+  parseChangeLogHelper clVersion tg automaticRollback mQuery rQuery
+ where
+  parseChangeLogHelper Nothing Nothing Nothing Nothing Nothing = fail "Failed to get changelog"
+  parseChangeLogHelper (Just clVersion) (Just tg) (Just automaticRollback) (Just mQuery) (Just rQuery) = do
+    let version = case readMaybe clVersion of
+          Nothing -> error $ inputFile <> ":\n\t" <> "@changelogVersion value is not an Integer"
+          Just v -> v
+    let ar = case readMaybe automaticRollback of
+          Nothing -> error $ inputFile <> ":\n\t" <> "@withAutomaticRollback value is not a Bool"
+          Just v -> v
+    let migrationHash = (CH.hash . BSU.fromString $ mQuery) :: (CH.Digest CH.MD5)
+    return $ Changelog version tg ar mQuery rQuery (DT.pack $ show migrationHash)
+  parseChangeLogHelper _ _ _ _ _ = error $ inputFile <> ":\n\t" <> "error parsing changelog"
+
+getChangelogVersion :: Parser String
+getChangelogVersion = string "--@changelogVersion:" *> manyTill anyChar (lookAhead $ string "--@")
+
+getTag :: Parser String
+getTag = string "--@tag:" *> manyTill anyChar (lookAhead $ string "--@")
+
+getAutomaticRollback :: Parser String
+getAutomaticRollback = string "--@withAutomaticRollback:" *> manyTill anyChar (lookAhead $ string "--@")
+
+getMigrationQuery :: Parser String
+getMigrationQuery = string "--@migrationQuery\n" *> manyTill anyChar (lookAhead $ string "--@")
+
+getRollbackQuery :: Parser String
+getRollbackQuery = string "--@rollbackQuery\n" *> manyTill anyChar (lookAhead $ string "--@")
 
 isEmpty :: String -> Bool
 isEmpty = all isSpace
