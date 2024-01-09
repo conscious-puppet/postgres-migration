@@ -3,7 +3,9 @@ module Types where
 import Data.Text
 
 data TableMigration = TableMigration
-  { baseTableName :: String
+  { env :: String
+  , baseTableName :: String
+  , dbName :: String
   , partitionSupportEnabled :: Bool
   , enableParitionQuery :: Maybe String
   , changelog :: [Changelog]
@@ -13,9 +15,10 @@ data TableMigration = TableMigration
 data Changelog = Changelog
   { changelogVersion :: Integer
   , tag :: String
+  , description :: String
   , withAutomaticRollback :: Bool
-  , migrationQuery :: String
-  , rollbackQuery :: String
-  , hash :: Text
+  , migrationQuery :: (String, String)
+  , rollbackQuery :: (String, String)
+  , md5Hash :: Text
   }
   deriving (Show, Eq)

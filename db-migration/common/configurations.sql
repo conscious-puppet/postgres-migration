@@ -1,12 +1,14 @@
 --@baseTableName: configuration
 --@partitionSupportEnabled: False
+--@dbName: dbName
 
 --@changelogVersion: 1
 --@tag: v1
 --@withAutomaticRollback: False
+--@description: description
 
 --@migrationQuery
-CREATE TABLE IF NOT EXISTS :tablename (
+CREATE TABLE IF NOT EXISTS @tablename (
     id integer NOT NULL,
     key character varying(255) NOT NULL,
     value character varying(255) NOT NULL,
@@ -15,4 +17,4 @@ CREATE TABLE IF NOT EXISTS :tablename (
 );
 
 --@rollbackQuery
-DROP TABLE IF EXISTS :tablename;
+DROP TABLE IF EXISTS @tablename;
