@@ -5,20 +5,8 @@ author:             Abhishek Singh
 
 executable postgres-migration
     main-is:                Main.hs
-    -- other-modules:          Storage.Types.Migration
-    --              ,          Storage.Queries.Migration
-    --              ,          Storage.Queries.DBQueries
-    -- default-extensions:    StandaloneDeriving
-    --                   ,    FlexibleInstances
-    --                   ,    MultiParamTypeClasses
-    --                   ,    TypeFamilies
-    --                   ,    DeriveGeneric
-    --                   ,    DeriveAnyClass
-    --                   ,    DuplicateRecordFields
-    --                   ,    FlexibleContexts
-    --                   ,    OverloadedStrings
-    --                   ,    RecordWildCards
-    --                   -- ,    AllowAmbiguousTypes
+    other-modules:          SqlParser
+                 ,          Types
     default-extensions:    OverloadedStrings
                       ,    DeriveGeneric
                       ,    DeriveAnyClass
@@ -36,6 +24,9 @@ executable postgres-migration
                  ,         aeson
                  ,         regex-tdfa
                  ,         aeson-pretty
+                 ,         attoparsec
+                 ,         parsec
+                 ,         utf8-string
     ghc-options: -Wall
     hs-source-dirs:        app
     default-language: Haskell2010

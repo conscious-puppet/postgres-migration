@@ -4,3 +4,5 @@
 - [ ] check if migration table exists, and run if not, refer to that blog
 - [ ] what if we don't merge code to master and deploy to uat? then there could be conflicts related to that
     - [ ] have migration and fallbacks
+
+- [ ] make matchers optional and then based on that see if any thing is missing
